@@ -20,6 +20,7 @@ model User {
   description String @default("")
   email String @unique
   password String 
+  verified Boolean @default(false)
   posts Post[]
   savedPost  SavedPost[]
 }

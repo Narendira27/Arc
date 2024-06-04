@@ -2,13 +2,16 @@ import { Hono } from "hono";
 import { PrismaClient } from "@prisma/client/edge";
 import { withAccelerate } from "@prisma/extension-accelerate";
 import { hashPassword, verifyHash } from "../hash";
-import { sign, verify } from "hono/jwt";
+import { sign, verify, decode } from "hono/jwt";
 import { signinInput, signupInput } from "@narendira/blog-common";
+
+import fetch from "isomorphic-fetch";
 
 const userRouter = new Hono<{
   Bindings: {
     DATABASE_URL: string;
     JWT: string;
+    EmailToken: string;
   };
   Variables: {
     userId: string;
@@ -25,12 +28,46 @@ userRouter.post("/signup", async (c) => {
   const { success } = signupInput.safeParse(body);
 
   if (!success) {
-    c.status(411);
+    c.status(403);
     return c.json({ msg: "Invalid Inputs" });
   }
 
-  const passwordHash = await hashPassword(body.password);
+  const sendMail = async () => {
+    const header = {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${c.env.EmailToken}`,
+    };
+
+    const data = JSON.stringify({
+      user: "Arc",
+      recipient: body.email,
+      url: "https://arc.narendira.tech",
+    });
+
+    const response = await fetch("https://verify.narendira.tech/send", {
+      method: "POST",
+      headers: header,
+      body: data,
+    });
+
+    if (response.statusText === "OK") {
+      interface parsedType {
+        msg: string;
+        sent: boolean;
+      }
+      const parsed: parsedType = await response.json();
+      console.log(parsed);
+      if (parsed.sent === true) {
+        return "Ok";
+      }
+      throw new Error("Something Went Wrong Try Again Later");
+    }
+    throw new Error("Something Went Wrong Try Again Later");
+  };
+
   try {
+    const passwordHash = await hashPassword(body.password);
     const user = await prisma.user.create({
       data: {
         name: body.name,
@@ -41,11 +78,16 @@ userRouter.post("/signup", async (c) => {
         password: passwordHash,
       },
     });
-    const jwt = await sign({ id: user.id }, c.env.JWT);
-    return c.json({ token: jwt, name: body.name });
+    await sendMail();
+    // const jwt = await sign({ id: user.id }, c.env.JWT);
+    // return c.json({ token: jwt, name: body.name });
+    return c.json({ msg: "true" });
   } catch (e: any) {
-    c.status(411);
-    return c.json({ msg: e.message });
+    c.status(400);
+    if (e.code === "P2002") {
+      return c.json({ msg: "Email Already Exists" });
+    }
+    return c.json({ msg: "Bad Request" });
   }
 });
 
@@ -59,7 +101,7 @@ userRouter.post("/signin", async (c) => {
   const { success } = signinInput.safeParse(body);
 
   if (!success) {
-    c.status(411);
+    c.status(403);
     return c.json({ msg: "Invalid Inputs" });
   }
 
@@ -70,8 +112,13 @@ userRouter.post("/signin", async (c) => {
       },
     });
     if (!user) {
-      c.status(403);
+      c.status(400);
       return c.json({ msg: "user not found" });
+    }
+
+    if (!user.verified) {
+      c.status(400);
+      return c.json({ msg: "Email not verified" });
     }
 
     const verify = await verifyHash(user.password, body.password);
@@ -84,8 +131,112 @@ userRouter.post("/signin", async (c) => {
     const jwt = await sign({ id: user.id }, c.env.JWT);
     return c.json({ token: jwt, name: user.name });
   } catch (e: any) {
-    c.status(411);
+    c.status(400);
     return c.json({ msg: e.message });
+  }
+});
+
+userRouter.post("/resend", async (c) => {
+  const body = await c.req.json();
+
+  const sendMail = async () => {
+    const header = {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${c.env.EmailToken}`,
+    };
+
+    const data = JSON.stringify({
+      user: "Arc",
+      recipient: body.email,
+      url: "https://arc.narendira.tech",
+    });
+
+    const response = await fetch("https://verify.narendira.tech/send", {
+      method: "POST",
+      headers: header,
+      body: data,
+    });
+
+    if (response.statusText === "OK") {
+      interface parsedType {
+        msg: string;
+        sent: boolean;
+      }
+      const parsed: parsedType = await response.json();
+      console.log(parsed);
+      if (parsed.sent === true) {
+        return "Ok";
+      }
+      throw new Error("Something Went Wrong Try Again Later");
+    }
+    throw new Error("Something Went Wrong Try Again Later");
+  };
+
+  try {
+    await sendMail();
+    return c.json({ msg: "true" });
+  } catch (e: any) {
+    c.status(400);
+    return c.json({ msg: "Bad Request" });
+  }
+});
+
+userRouter.post("/verify", async (c) => {
+  const prisma = new PrismaClient({
+    datasourceUrl: c.env.DATABASE_URL,
+  }).$extends(withAccelerate());
+
+  const body = await c.req.json();
+
+  const verifyMail = async () => {
+    const header = {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${c.env.EmailToken}`,
+    };
+
+    const data = JSON.stringify({
+      user: "Arc",
+      token: body.token,
+    });
+
+    const response = await fetch("https://verify.narendira.tech/verify", {
+      method: "POST",
+      headers: header,
+      body: data,
+    });
+
+    if (response.statusText === "OK") {
+      interface parsedType {
+        msg: string;
+        verfied: boolean;
+      }
+      const parsed: parsedType = await response.json();
+      if (parsed.verfied === true) {
+        return "Ok";
+      }
+      throw new Error("Something Went Wrong Try Again Later");
+    }
+    throw new Error("Something Went Wrong Try Again Later");
+  };
+
+  try {
+    await verifyMail();
+    const email = decode(body.token).payload.email;
+    await prisma.user.update({
+      where: {
+        email,
+      },
+      data: {
+        verified: true,
+      },
+    });
+    c.status(200);
+    return c.json({ msg: "verified" });
+  } catch (e) {
+    c.status(400);
+    return c.json({ msg: "Bad Request" });
   }
 });
 
@@ -113,6 +264,26 @@ userRouter.use("/*", async (c, next) => {
 userRouter.get("/me", async (c) => {
   c.status(200);
   return c.json({ verified: true });
+});
+
+userRouter.delete("/me", async (c) => {
+  const prisma = new PrismaClient({
+    datasourceUrl: c.env.DATABASE_URL,
+  }).$extends(withAccelerate());
+
+  const authId = c.get("userId");
+
+  try {
+    const deleteUser = await prisma.user.delete({
+      where: {
+        id: authId,
+      },
+    });
+    return c.json({ msg: "User Deleted" });
+  } catch (e) {
+    c.status(400);
+    return c.json({ msg: "Bad Request" });
+  }
 });
 
 userRouter.get("/profile", async (c) => {
@@ -286,26 +457,6 @@ userRouter.delete("/save", async (c) => {
       },
     });
     return c.json({ msg: "success" });
-  } catch (e) {
-    c.status(400);
-    return c.json({ msg: "Bad Request" });
-  }
-});
-
-userRouter.delete("/delete", async (c) => {
-  const prisma = new PrismaClient({
-    datasourceUrl: c.env.DATABASE_URL,
-  }).$extends(withAccelerate());
-
-  const authId = c.get("userId");
-
-  try {
-    const deleteUser = await prisma.user.delete({
-      where: {
-        id: authId,
-      },
-    });
-    return c.json({ msg: "User Deleted" });
   } catch (e) {
     c.status(400);
     return c.json({ msg: "Bad Request" });

@@ -24,7 +24,9 @@ function ProfileDetails({ details }: { details: detailsType }) {
             {details.name[0].toLocaleUpperCase()}
           </div>
           <div className="flex flex-col items-center">
-            <h1 className="font-bold text-md md:text-lg lg:text-xl capitalize py-1 md:py-2 ">{details.name}</h1>
+            <h1 className="font-bold text-md md:text-lg lg:text-xl capitalize py-1 md:py-2 ">
+              {details.name}
+            </h1>
             <p className=" font-semibold text-xs md:text-lg text-pretty capitalize py-1 md:py-2">
               {!details.title ? "Welcome New User!" : details.title}
             </p>
@@ -59,8 +61,18 @@ function ProfileDetails({ details }: { details: detailsType }) {
 
 export default ProfileDetails;
 
-const PopupElement = ({ details, navigate }: { details: detailsType; navigate: NavigateFunction }) => {
-  const [values, setValues] = useState<detailsType>({ name: "", title: "", description: "" });
+const PopupElement = ({
+  details,
+  navigate,
+}: {
+  details: detailsType;
+  navigate: NavigateFunction;
+}) => {
+  const [values, setValues] = useState<detailsType>({
+    name: "",
+    title: "",
+    description: "",
+  });
   const [loading, setLoading] = useState(false);
   const [propStatus, setPropStatus] = useState(false);
   const closeModal = () => setPropStatus(false);
@@ -86,7 +98,9 @@ const PopupElement = ({ details, navigate }: { details: detailsType; navigate: N
       setLoading(true);
       const jwt = Cookies.get("authToken");
       const token = `Bearer ${jwt}`;
-      await axios.put(`${url}blog/profile`, values, { headers: { Authorization: token } });
+      await axios.put(`${url}user/profile`, values, {
+        headers: { Authorization: token },
+      });
       setLoading(false);
       navigate(0);
     } catch (e) {
@@ -106,7 +120,10 @@ const PopupElement = ({ details, navigate }: { details: detailsType; navigate: N
       <Popup open={propStatus} closeOnDocumentClick onClose={closeModal}>
         <div className="modal bg-slate-500 flex flex-col  rounded-md p-5 ">
           <div className="flex justify-end">
-            <a className="close text-xl font-bold mr-5 cursor-pointer" onClick={closeModal}>
+            <a
+              className="close text-xl font-bold mr-5 cursor-pointer"
+              onClick={closeModal}
+            >
               &times;
             </a>
           </div>
@@ -158,7 +175,10 @@ const PopupElement = ({ details, navigate }: { details: detailsType; navigate: N
             />
           </div>
           <div className="mt-5 ml-2 ">
-            <button onClick={onClickSave} className="bg-green-400 text-black p-2 rounded-md ">
+            <button
+              onClick={onClickSave}
+              className="bg-green-400 text-black p-2 rounded-md "
+            >
               {!loading ? "Save" : <Spinner />}
             </button>
           </div>

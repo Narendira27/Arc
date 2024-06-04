@@ -9,8 +9,9 @@ function RootPage() {
   const navigate = useNavigate();
   useEffect(() => {
     const token = Cookies.get("authToken");
+    axios.get("https://verify.narendira.tech/");
     axios
-      .get(`${url}blog/me`, { headers: { Authorization: `Bearer ${token}` } })
+      .get(`${url}user/me`, { headers: { Authorization: `Bearer ${token}` } })
       .then((res) => {
         if (res.data.verified) {
           navigate("blogs");

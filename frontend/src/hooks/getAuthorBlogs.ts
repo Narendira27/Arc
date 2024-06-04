@@ -26,10 +26,14 @@ function useGetAuthorBlogs() {
   useEffect(() => {
     setLoading(true);
     const token = Cookies.get("authToken");
-    axios.get(`${url}blog/published`, { headers: { Authorization: `Bearer ${token}` } }).then((res) => {
-      setData(res.data);
-      setLoading(false);
-    });
+    axios
+      .get(`${url}user/published`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((res) => {
+        setData(res.data);
+        setLoading(false);
+      });
   }, []);
 
   return { loadingBlogs, data };

@@ -32,9 +32,9 @@ function BlogCard({
   savedPost,
 }: BlogCardProps) {
   const [bookmarkStatus, setBookmarkStatus] = useState(false);
-  const [ saveLoading, setSaveLoading ]= useState(false)
+  const [saveLoading, setSaveLoading] = useState(false);
 
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (savedPost.length !== 0) {
@@ -44,37 +44,31 @@ function BlogCard({
 
   const jwt = Cookies.get("authToken");
 
-  const onClickBookmark = async() => {
-
-    if(bookmarkStatus === false){
-      try{
-        setSaveLoading(true)
-         await axios.post(
-          `${url}blog/save`,
+  const onClickBookmark = async () => {
+    if (bookmarkStatus === false) {
+      try {
+        setSaveLoading(true);
+        await axios.post(
+          `${url}user/save`,
           { postId: id },
           { headers: { Authorization: `Bearer ${jwt}` } }
         );
         setBookmarkStatus((prev) => !prev);
-        setSaveLoading(false)
-        navigate(0)
-      }
-      catch{
-      }
+        setSaveLoading(false);
+        navigate(0);
+      } catch {}
     }
-    if(bookmarkStatus === true){
-      try{
-        setSaveLoading(true)
+    if (bookmarkStatus === true) {
+      try {
+        setSaveLoading(true);
         await axios.delete(`${url}blog/save`, {
-         data: { id : savedPost[0].id },
-         headers: { Authorization: `Bearer ${jwt}` },
-       });
-       setBookmarkStatus((prev) => !prev);
-       setSaveLoading(false)
-       
-      }catch{
-      }
+          data: { id: savedPost[0].id },
+          headers: { Authorization: `Bearer ${jwt}` },
+        });
+        setBookmarkStatus((prev) => !prev);
+        setSaveLoading(false);
+      } catch {}
     }
-
   };
 
   return (
@@ -110,7 +104,15 @@ function BlogCard({
         </div>
         <div className="pr-3">
           <button className="text-lg" onClick={onClickBookmark}>
-            { !saveLoading ? bookmarkStatus ? <FaBookmark /> : <FaRegBookmark /> : <ThreeDotSpinner/> }
+            {!saveLoading ? (
+              bookmarkStatus ? (
+                <FaBookmark />
+              ) : (
+                <FaRegBookmark />
+              )
+            ) : (
+              <ThreeDotSpinner />
+            )}
           </button>
         </div>
       </div>

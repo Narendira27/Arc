@@ -14,7 +14,7 @@ function ProtectedRoute({ children }: { children: void | JSX.Element }) {
 
   useEffect(() => {
     axios
-      .get(`${url}blog/me`, { headers: { Authorization: `Bearer ${token}` } })
+      .get(`${url}user/me`, { headers: { Authorization: `Bearer ${token}` } })
       .then((res) => {
         if (res.data.verified) {
           setStatus(true);

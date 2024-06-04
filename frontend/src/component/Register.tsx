@@ -1,7 +1,9 @@
 import { useState } from "react";
 import axios from "axios";
-import Cookies from "js-cookie";
 import { Link, useNavigate } from "react-router-dom";
+
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 import url from "../Url";
 import { SignupInput } from "@narendira/blog-common";
@@ -23,30 +25,47 @@ export default function Register() {
 
   const navigate = useNavigate();
 
+  const notify = () =>
+    toast("Verify your Email & Login ...", {
+      position: "bottom-right",
+      autoClose: 5000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+      theme: "light",
+    });
+
   const onClickRegister = async () => {
     const checkPass = verifyPassword === signUpData.password;
-    if (!checkPass) {
-      setError((prev) => ({ ...prev, status: true, name: "Password Doesn't Match" }));
-    }
-    try {
-      setLoading(true);
-      const res = await axios.post(`${url}user/signup`, signUpData);
-      const data = res.data;
-      Cookies.set("authToken", data.token);
-      localStorage.setItem("Name", data.name);
-      setLoading(false);
-      navigate("/blogs");
-    } catch (e: any) {
-      const errorMsg = e.message;
-      setLoading(false);
-      setError(() => ({ status: true, name: errorMsg }));
+    if (checkPass) {
+      try {
+        setLoading(true);
+        await axios.post(`${url}user/signup`, signUpData);
+        notify();
+        setLoading(false);
+        navigate("/signin");
+      } catch (e: any) {
+        setLoading(false);
+        const errorMsg = e.response.data.msg;
+        setError(() => ({ status: true, name: errorMsg }));
+      }
+    } else {
+      setError((prev) => ({
+        ...prev,
+        status: true,
+        name: "Password Doesn't Match",
+      }));
     }
   };
 
   return (
     <div className="bg-white min-h-screen flex flex-col justify-center items-center p-5">
       <div className="flex flex-col items-center">
-        <h1 className=" text-2xl lg:text-3xl xl:text-4xl font-extrabold">Create an account</h1>
+        <h1 className=" text-2xl lg:text-3xl xl:text-4xl font-extrabold">
+          Create an account
+        </h1>
         <p className="text-md lg:text-lg xl:text-xl text-slate-400 mt-4 mb-4">
           Already have an account?{" "}
           <Link className="underline" to="/signin">
@@ -86,7 +105,9 @@ export default function Register() {
           }}
         />
 
-        {error.status ? <p className="m-4 font-bold text-red-600 text-md "> *{error.name}</p> : null}
+        {error.status ? (
+          <p className="m-4 font-bold text-red-600 text-md "> * {error.name}</p>
+        ) : null}
 
         <div className="m-4 mt-8">
           <button
@@ -95,7 +116,7 @@ export default function Register() {
             }}
             className="border border-black rounded-lg text-xl p-2 w-full bg-black text-white hover:bg-white hover:text-black hover:border hover:border-black"
           >
-            {!loading ? "Signin" : <Spinner />}
+            {!loading ? "Signup" : <Spinner />}
           </button>
         </div>
       </div>

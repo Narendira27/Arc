@@ -32,7 +32,7 @@ function SavedBlogs() {
   useEffect(() => {
     const token = Cookies.get("authToken");
     axios
-      .get(`${url}blog/save`, {
+      .get(`${url}user/save`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => {

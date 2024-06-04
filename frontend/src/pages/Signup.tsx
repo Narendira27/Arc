@@ -11,11 +11,14 @@ const SignupPage = () => {
 
   useEffect(() => {
     const token = Cookies.get("authToken");
-    axios.get(`${url}blog/me`, { headers: { Authorization: `Bearer ${token}` } }).then((res) => {
-      if (res.data.verified) {
-        navigate("/blogs");
-      }
-    });
+    axios
+      .get(`${url}user/me`, { headers: { Authorization: `Bearer ${token}` } })
+      .then((res) => {
+        if (res.data.verified) {
+          navigate("/blogs");
+        }
+      })
+      .catch(() => {});
   }, []);
 
   return (

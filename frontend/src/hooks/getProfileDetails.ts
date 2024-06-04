@@ -27,7 +27,7 @@ export default function useGetProfileDetails() {
     try {
       setLoading(true);
       axios
-        .get(`${url}blog/profile`, {
+        .get(`${url}user/profile`, {
           headers: { Authorization: token },
         })
         .then((res) => {

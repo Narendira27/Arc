@@ -11,6 +11,7 @@ import {
   ProtectedRoute,
   ViewBlogPage,
 } from "./pages/Index";
+import VerifyPage from "./pages/Verify";
 
 function App() {
   return (
@@ -68,6 +69,8 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+        <Route path="/verify" element={<VerifyPage />} />
       </Routes>
     </BrowserRouter>
   );

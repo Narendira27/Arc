@@ -52,7 +52,7 @@ export default function AppBar() {
           navigate("/blogs");
         }}
       >
-        <h1 className="font-bold text-base md:text-lg lg:text-xl">MEDIUM</h1>
+        <h1 className="font-bold text-base md:text-lg lg:text-xl">ARC</h1>
       </div>
 
       <div className="flex items-center">

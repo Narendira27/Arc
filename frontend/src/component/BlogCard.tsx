@@ -61,7 +61,7 @@ function BlogCard({
     if (bookmarkStatus === true) {
       try {
         setSaveLoading(true);
-        await axios.delete(`${url}blog/save`, {
+        await axios.delete(`${url}user/save`, {
           data: { id: savedPost[0].id },
           headers: { Authorization: `Bearer ${jwt}` },
         });

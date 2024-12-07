@@ -24,6 +24,7 @@ userRouter.post("/signup", async (c) => {
   }).$extends(withAccelerate());
 
   const body = await c.req.json();
+  
 
   const { success } = signupInput.safeParse(body);
 

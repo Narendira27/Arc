@@ -45,7 +45,7 @@ userRouter.post("/signup", async (c) => {
       url: "https://arc.narendira.tech",
     });
 
-    const response = await fetch("https://verify.narendira.tech/send", {
+    const response = await fetch("https://verify.narendira.in/send", {
       method: "POST",
       headers: header,
       body: data,
@@ -152,7 +152,7 @@ userRouter.post("/resend", async (c) => {
       url: "https://arc.narendira.tech",
     });
 
-    const response = await fetch("https://verify.narendira.tech/send", {
+    const response = await fetch("https://verify.narendira.in/send", {
       method: "POST",
       headers: header,
       body: data,
@@ -201,7 +201,7 @@ userRouter.post("/verify", async (c) => {
       token: body.token,
     });
 
-    const response = await fetch("https://verify.narendira.tech/verify", {
+    const response = await fetch("https://verify.narendira.in/verify", {
       method: "POST",
       headers: header,
       body: data,
